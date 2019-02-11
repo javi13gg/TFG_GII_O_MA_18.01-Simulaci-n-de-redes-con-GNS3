@@ -25,48 +25,48 @@ archivo.close()
 array = np.genfromtxt(StringIO(datos), delimiter=",", dtype="|U20", autostrip=True)
 #Numero de interfaces a configurar
 numConfigs = len(array)
+numFila=0
 
 
 
 '''
-telnet(ip)
-Funcion que recibe una dirección IP y realiza una conexión mediante telnet para configurar las interfaces
-del componente.
+telnet(ip,numFila)
+Funcion que recibe una dirección IP y el número de fila del fichero en que se encuentra la ejecución
+ y realiza una conexión mediante telnet para configurar las interfaces del componente.
 
 Autor: Javier García González
 '''
 
-def telnet(ip):
+def telnet(ip,numFila):
     wait = 2
     con = telnetlib.Telnet(ip, 23, 5)
-    i=0
+
     
-    while i <= numConfigs-1:
-        #Se comprueba si es DHCP, en caso afirmativo no se cambia nada.
-        if array[i][3] == 1:
-            break;
-        else:
-            #Se comprueba el tipo de equipo que es, Router o PC
-            if array[i][0] == 'Router':
+    #Se comprueba si es DHCP, en caso afirmativo no se cambia nada.
+    if array[numFila][3] == 1:
+        print("Es DHCP, no se configura" + "\n")
+    else:
+        #Se comprueba el tipo de equipo que es, Router o PC
+        if array[numFila][0] == 'Router':
+        
+            con.write("configure terminal" + "\n")
+            time.sleep(wait)
+            con.write("int " + array[numFila][2] + "\n")
+            time.sleep(wait)
+            con.write("ip address " + array[numFila][7] + array[numFila][8] + "\n")
+            time.sleep(wait)
+            con.write("no shutdown" + "\n")
+            time.sleep(wait)
+            con.write("exit" + "\n")
+            time.sleep(wait)
             
-                con.write("configure terminal" + "\n")
-                time.sleep(wait)
-                con.write("int " + array[i][2] + "\n")
-                time.sleep(wait)
-                con.write("ip address " + array[i][7] + array[i][8] + "\n")
-                time.sleep(wait)
-                con.write("no shutdown" + "\n")
-                time.sleep(wait)
-                con.write("exit" + "\n")
-                time.sleep(wait)
-                
-                
-            if array[i][0] == 'PC':
-                
-                con.write("ifconfig " + array[6][2] + " " + array[6][7] + " netmask " + array[6][8] + " broadcast " + array[6][9] + " up" + "\n")
-                time.sleep(wait)        
-                
-            i+=1
+            
+        if array[numFila][0] == 'PC':
+            
+            con.write("ifconfig " + array[numFila][2] + " " + array[numFila][7] + " netmask " 
+                      + array[numFila][8] + " broadcast " + array[numFila][9] + " up" + "\n")
+            time.sleep(wait)        
+    
             
 
 '''
@@ -102,7 +102,7 @@ while True:
         input("Lanzando configuración...\n pulsa enter para continuar")
         j=0
         while j <= numConfigs-1:
-            telnet(array[j][4])
+            telnet(array[j][4],j)
             j+=1
         print("Configuración realizada correctamente.")
         
